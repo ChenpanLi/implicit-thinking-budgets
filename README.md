@@ -3,9 +3,11 @@
 # On the Fragility of Tasks under Composition: Implicit Budgeting in Language Models
 
 
-**Chenpan Li**<sup>1</sup> · **Thies Brockmöller**<sup>1</sup> · **Stefanie Jegelka**<sup>1,2</sup> · **Sharut Gupta**<sup>2</sup> · **Nikolaos Karalias**<sup>2</sup>
+**Chenpan Li**<sup>1</sup> · **Thies Brockmöller**<sup>1</sup> · **Stefanie Jegelka**<sup>1,2</sup> · **Sharut Gupta**<sup>2,◇</sup> · **Nikolaos Karalias**<sup>2,◇</sup>
 
 <sup>1</sup>Technical University of Munich &nbsp;·&nbsp; <sup>2</sup>Massachusetts Institute of Technology
+
+<sup>◇</sup>Denotes equal advisory roles
 
 [Setup](#setup) · [Reproduce the results](#reproduce-the-paper) · [Run from scratch](#run-from-scratch) · [FAQ](#faq) · [Citation](#citation)
 
