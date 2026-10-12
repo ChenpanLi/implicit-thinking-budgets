@@ -1,0 +1,2 @@
+datasets/integrals/** filter=lfs diff=lfs merge=lfs -text
+datasets/onewordqa/** filter=lfs diff=lfs merge=lfs -text

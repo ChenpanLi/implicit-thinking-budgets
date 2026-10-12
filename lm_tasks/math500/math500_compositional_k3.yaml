@@ -1,0 +1,6 @@
+include: _math500_template_yaml
+task: math500_compositional_k3
+tag: [math500_comp, math500_compositional]
+metadata:
+  stage: compositional
+  k: 3

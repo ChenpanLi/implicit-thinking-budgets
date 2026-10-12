@@ -1,0 +1,6 @@
+include: _strategyqa_template_yaml
+task: strategyqa_compositional_k6
+tag: [strategyqa_comp, strategyqa_compositional]
+metadata:
+  stage: compositional
+  k: 6

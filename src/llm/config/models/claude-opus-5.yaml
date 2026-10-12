@@ -1,0 +1,25 @@
+# Hosted model: no weights, no GPU, no port -- requests go to OpenRouter and are
+# billed to the OPENROUTER_API_KEY in .env.
+provider: openrouter
+model_id: "anthropic/claude-opus-5"
+
+# sampling parameters (identical in meaning to the local configs). Sent on every
+# request, but Anthropic's API refuses temperature/top_p on its thinking models and
+# OpenRouter lists no top_p for this model, so upstream either drops them or
+# refuses the request -- a first request failing with a 400 is the sign.
+temperature: 0.6
+top_p: 0.95
+# The model's maximum output (OpenRouter max_completion_tokens: 128000). It covers
+# the reasoning AND the visible answer, so a reasoning-heavy reply that runs out
+# returns finish_reason "length" with an empty answer.
+max_tokens: 128000
+
+# context window, used as lm-eval's max_length
+max_model_len: 200000
+
+# Anything under extra_body is merged into the request body. Reasoning is on by
+# default for this model on OpenRouter; this pins its effort (supported: max, xhigh,
+# high, medium, low) so a change of OpenRouter's default cannot move the numbers.
+extra_body:
+  reasoning:
+    effort: "medium"

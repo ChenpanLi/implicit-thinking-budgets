@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+*.egg-info
+.venv/
+
+# Local settings and secrets
+.env
+
+# Assistant files
+CLAUDE.md
+.claude/
+
+# Logs and run artefacts (all data lives under RUN_DIR, outside the repository)
+wandb/
+logs/
+results/
+*.log
+
+# Datasets: only the two pools we built ourselves ship, through Git LFS
+datasets/*
+!datasets/integrals/
+!datasets/onewordqa/
+
+# The paper lives in its own repository, kept beside the code but never part of it
+paper/

@@ -1,0 +1,42 @@
+[project]
+name = "compositional-fragility"
+version = "1.0.0"
+description = "Code for the paper's experiments on how LLM accuracy degrades when several tasks share one prompt"
+readme = "README.md"
+requires-python = ">=3.12"
+
+dependencies = [
+	"lm-eval[api,hf]>=0.4.12",
+	"transformers>=5.14.1",
+	"safetensors>=0.8.0",
+	"sympy>=1.14.0",
+	"antlr4-python3-runtime==4.9.3",
+	"latex2sympy2-extended>=1.11.0",
+	"omegaconf>=2.3.0",
+	"numpy>=2.3.5",
+	"pandas>=3.0.5",
+	"pyarrow",
+	"scipy>=1.18.0",
+	"scikit-learn>=1.9.0",
+	"matplotlib",
+	"tqdm>=4.67.0",
+]
+
+# Needed only to run the models locally (the GPU stages).
+[project.optional-dependencies]
+gpu = [
+	"vllm",
+	"nvidia-cuda-nvcc>=13.3.73",
+	"lm-eval[vllm]>=0.4.12",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.24,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "llm"
+module-root = "src"
+
+[tool.uv.sources]
+lm-eval = { git = "https://github.com/EleutherAI/lm-evaluation-harness.git", rev = "0f8479cc83a1b9652294d1c0257d22c7756155ec" }

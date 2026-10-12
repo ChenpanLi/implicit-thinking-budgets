@@ -1,0 +1,20 @@
+# DeepSeek-R1-0528-Qwen3-8B.
+model_id: "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B"
+tensor_parallel_size: 1
+gpu_memory_utilization: 0.9
+# The checkpoint's own max_position_embeddings.
+max_model_len: 131072
+trust_remote_code: true
+
+temperature: 0.6
+top_p: 0.95
+# max_model_len minus ~1024 tokens of prompt headroom; the in-process backend clamps
+# this per request to max_model_len - prompt_tokens anyway (llm.core.serving.lm_eval_vllm).
+max_tokens: 130048
+
+# Settings some runs of the paper used instead (`--model-variant`).
+variants:
+  # A shorter window: the composed runs on integrals and mmlu.
+  ctx-49k:
+    max_model_len: 49152
+    max_tokens: 48128

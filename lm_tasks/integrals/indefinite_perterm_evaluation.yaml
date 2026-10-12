@@ -1,0 +1,12 @@
+# The evaluation task: one whole batch file, whatever k its rows hold (k=1 for the
+# isolated stages, mixed k for a batching). There is no `k` in the metadata, so
+# `utils.load_integral_dataset` does not narrow the file.
+#
+# `acc_terms` is the quantity that stays meaningful when k varies within a pass,
+# and `n_terms`/`n_correct` on every trace record let the analyses pool the terms
+# (sum(n_correct) / sum(n_terms)) instead of averaging batches of unequal size.
+include: _indefinite_perterm_template_yaml
+task: indefinite_perterm_evaluation
+tag: [indefinite, indefinite_perterm]
+metadata:
+  stage: evaluation

@@ -1,0 +1,33 @@
+# Olmo 3 7B Think, at the DPO stage: the SFT checkpoint after preference optimisation, before RLVR.
+#
+# The three Olmo 3 Think 7B checkpoints in this repository are the same
+# architecture and the same tokenizer at three points of one post-training
+# pipeline -- SFT, then DPO on top of it, then RLVR on top of that -- so they
+# differ in weights and in nothing else. Keeping their serving settings
+# identical is the point: a difference between their k-curves is then a
+# difference in post-training rather than in how they were served.
+#
+# Thinking is opened by the chat template and closed by the model with the
+# ordinary `<think>` / `</think>` tags, which is the `think-tags` family
+# both `llm.core.thinking_text` and `llm.core.thinking.delimiters` already
+# recognise, so no extra key is needed here.
+model_id: "allenai/Olmo-3-7B-Think-DPO"
+tensor_parallel_size: 1
+gpu_memory_utilization: 0.90
+# 65536, the checkpoint's own max_position_embeddings. Its config.json carries
+# a YaRN rope_scaling block from an 8192-token original, so the long context is
+# the checkpoint's, not something set here. 8 of the 32 layers are full
+# attention (32 KV heads x 128 head_dim = 16 KB per token per layer, so 128 KB
+# per token) and the other 24 slide over a 4096-token window; one full-length
+# sequence therefore costs about 8.4 GB of KV cache. On a 94 GB H100 the 14.6 GB
+# of weights at 0.90 leave roughly 68 GB, so the window fits eight times over.
+max_model_len: 65536
+
+# sampling parameters, the checkpoint's own generation_config and the same as
+# every Qwen3 config here, so the roster is uniform on this axis
+temperature: 0.6
+top_p: 0.95
+# max_model_len minus ~1024 tokens of prompt headroom; the in-process backend
+# clamps this per request to max_model_len - prompt_tokens anyway
+# (llm.core.serving.lm_eval_vllm), so it is a ceiling, not a promise.
+max_tokens: 64512

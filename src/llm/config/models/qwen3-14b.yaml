@@ -1,0 +1,30 @@
+# Qwen3-14B, a hybrid-reasoning model with thinking on by default: the chat template
+# only pre-closes the block when templated with `enable_thinking=False`, which nothing
+# here passes, so the model opens and closes `<think>` itself.
+model_id: "Qwen/Qwen3-14B"
+tensor_parallel_size: 1
+gpu_memory_utilization: 0.9
+# The checkpoint's own max_position_embeddings (no rope_scaling block).
+max_model_len: 40960
+
+# sampling: Qwen's recommendation for thinking mode
+temperature: 0.6
+top_p: 0.95
+# max_model_len minus ~1024 tokens of prompt headroom; the in-process backend clamps
+# this per request to max_model_len - prompt_tokens anyway (llm.core.serving.lm_eval_vllm).
+max_tokens: 39936
+
+# Settings some runs of the paper used instead (`--model-variant`).
+variants:
+  # 131072 tokens through YaRN (factor 4 over the 32768 trained positions, as the model
+  # card prescribes). Used by the budget-forcing runs and the AIME composed run. YaRN is
+  # static in vLLM, so it changes what the model computes at every position.
+  yarn-131k:
+    max_model_len: 131072
+    max_tokens: 130048
+    hf_overrides:
+      rope_parameters:
+        rope_type: yarn
+        factor: 4.0
+        original_max_position_embeddings: 32768
+        rope_theta: 1000000

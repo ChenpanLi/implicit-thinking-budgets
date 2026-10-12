@@ -1,0 +1,6 @@
+include: _aime_template_yaml
+task: aime_compositional_k10
+tag: [aime_comp, aime_compositional]
+metadata:
+  stage: compositional
+  k: 10

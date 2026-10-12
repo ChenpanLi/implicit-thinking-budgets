@@ -1,0 +1,84 @@
+# Shared base for every GPQA-main task.
+#
+# Deliberately has no .yaml extension: lm-eval's task index globs **/*.yaml, so
+# an extension here would register the template itself as a broken task.
+#
+# The task *tags* are `gpqa_comp`, never `gpqa`: lm-eval ships its own GPQA
+# tasks (`gpqa_main_zeroshot`, `gpqa_main_cot_n_shot`, ...) all tagged `gpqa`,
+# and a tag by that name here would be merged into that group -- so
+# `--tasks gpqa` in this repo would silently mean something other than what it
+# means everywhere else. The same trap the MMLU task layer records for `mmlu`.
+
+custom_dataset: !function utils.load_gpqa_dataset
+test_split: test
+output_type: generate_until
+num_fewshot: 0
+
+doc_to_text: !function utils.doc_to_text
+doc_to_target: "{{reference_answer}}"
+process_results: !function utils.process_results
+
+generation_kwargs:
+  # REQUIRED. Left unset, TaskConfig defaults `until` to the fewshot delimiter
+  # ("\n\n"), which truncates a reasoning model at its first blank line -- and
+  # here it would also truncate at the blank line between two questions if the
+  # model restated them.
+  until: []
+  # REQUIRED when repeats > 1. LocalChatCompletion hard-codes seed=1234 into
+  # every payload, so without this every repeat returns an identical generation
+  # and the trial average is meaningless. `**gen_kwargs` is spread after "seed"
+  # in the payload literal, so null wins.
+  seed: null
+  do_sample: true
+  temperature: 0.6
+  top_p: 0.95
+  # A floor, not the value a run uses: llm.run passes the model config's own
+  # `max_tokens` through `gen_kwargs`, which updates this. It matters for GPQA
+  # more than for MMLU -- the questions are graduate level and a k=10 prompt of
+  # them can run very long.
+  max_gen_toks: 40960
+
+repeats: 1
+
+filter_list:
+  # Two extraction strategies, scored side by side in one pass. `lenient` is
+  # what the figures read: an `Answer:`-style marker or a box anywhere in the
+  # response, and failing that the option letters at its end. `explicit`
+  # drops that last step, so acc,lenient - acc,explicit is what reading an
+  # unmarked response bought -- lucky guesses included.
+  - name: lenient
+    filter:
+      - function: "custom"
+        filter_fn: !function utils.extract_lenient
+  - name: explicit
+    filter:
+      - function: "custom"
+        filter_fn: !function utils.extract_explicit
+
+metric_list:
+  # The headline: every one of the k questions answered correctly.
+  - {metric: acc, aggregation: mean, higher_is_better: true}
+  # Partial credit, first-class rather than derived: the fraction of the k
+  # questions that were right. It and `acc` disagree by construction past k=1,
+  # and both are reported so neither can be silently read as the other.
+  - {metric: acc_terms, aggregation: mean, higher_is_better: true}
+  - {metric: mean_n_correct, aggregation: mean, higher_is_better: true}
+  - {metric: solved_all, aggregation: mean, higher_is_better: true}
+  - {metric: frac_wrong, aggregation: mean, higher_is_better: false}
+  # Kept apart rather than collapsed into one "parse error" counter: an empty
+  # response (a client timeout or an exhausted context), a response naming no
+  # option at all, an answer list of the wrong length and an option letter that
+  # was never offered are four different problems with four different fixes.
+  - {metric: frac_unparseable, aggregation: mean, higher_is_better: false}
+  - {metric: frac_empty, aggregation: mean, higher_is_better: false}
+  - {metric: frac_no_answer, aggregation: mean, higher_is_better: false}
+  - {metric: frac_wrong_length, aggregation: mean, higher_is_better: false}
+  - {metric: frac_invalid_letter, aggregation: mean, higher_is_better: false}
+  - {metric: frac_no_letters, aggregation: mean, higher_is_better: false}
+  # Not a failure bucket: an answer list longer than k is graded on its first k
+  # (see `llm.core.mcq.answers`), and this is how often that happened.
+  - {metric: frac_truncated, aggregation: mean, higher_is_better: false}
+  - {metric: mean_response_chars, aggregation: mean, higher_is_better: true}
+
+metadata:
+  version: 1.0

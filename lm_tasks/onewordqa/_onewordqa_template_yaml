@@ -1,0 +1,74 @@
+# Shared base for every one-word QA task.
+#
+# Deliberately has no .yaml extension: lm-eval's task index globs **/*.yaml, so
+# an extension here would register the template itself as a broken task.
+#
+# The task *tags* are `onewordqa`, which collides with nothing lm-eval ships --
+# unlike MMLU, where a tag named `mmlu` silently overrides lm-eval's own MMLU group ("Task 'mmlu' from None overrides existing task").
+
+custom_dataset: !function utils.load_onewordqa_dataset
+test_split: test
+output_type: generate_until
+num_fewshot: 0
+
+doc_to_text: !function utils.doc_to_text
+doc_to_target: "{{reference_answer}}"
+process_results: !function utils.process_results
+
+generation_kwargs:
+  # REQUIRED. Left unset, TaskConfig defaults `until` to the fewshot delimiter
+  # ("\n\n"), which truncates a reasoning model at its first blank line.
+  until: []
+  # REQUIRED when repeats > 1. LocalChatCompletion hard-codes seed=1234 into
+  # every payload, so without this every repeat returns an identical generation
+  # and the trial average is meaningless. `**gen_kwargs` is spread after "seed"
+  # in the payload literal, so null wins.
+  seed: null
+  do_sample: true
+  temperature: 0.6
+  top_p: 0.95
+  max_gen_toks: 40960
+
+repeats: 1
+
+filter_list:
+  # Two extraction strategies, scored side by side in one pass. `lenient` is
+  # what the figures read: a numbered block, an `Answer:`-style marker, a box,
+  # or a bare block of answer-shaped lines -- and failing all of those, the
+  # closing lines of the response whatever they look like. `explicit` drops
+  # only that last step, so acc,lenient - acc,explicit is exactly what reading
+  # an unmarked ending bought, lucky guesses included.
+  - name: lenient
+    filter:
+      - function: "custom"
+        filter_fn: !function utils.extract_lenient
+  - name: explicit
+    filter:
+      - function: "custom"
+        filter_fn: !function utils.extract_explicit
+
+metric_list:
+  # The headline: every one of the k questions answered correctly. This is the
+  # direct analogue of a correct antiderivative for a whole sum, and it is what
+  # the default figure plots.
+  - {metric: acc, aggregation: mean, higher_is_better: true}
+  # Partial credit, first-class rather than derived: the fraction of the k
+  # questions that were right. It and `acc` disagree by construction past k=1,
+  # and both are reported so neither can be silently read as the other.
+  - {metric: acc_terms, aggregation: mean, higher_is_better: true}
+  - {metric: mean_n_correct, aggregation: mean, higher_is_better: true}
+  - {metric: solved_all, aggregation: mean, higher_is_better: true}
+  - {metric: frac_wrong, aggregation: mean, higher_is_better: false}
+  # Kept apart rather than collapsed into one "parse error" counter: an empty
+  # response (a client timeout), a response with no answer block anywhere, a
+  # block holding no answer-bearing line and a block of the wrong length are
+  # four different problems with four different fixes.
+  - {metric: frac_unparseable, aggregation: mean, higher_is_better: false}
+  - {metric: frac_empty, aggregation: mean, higher_is_better: false}
+  - {metric: frac_no_answer, aggregation: mean, higher_is_better: false}
+  - {metric: frac_no_answer_lines, aggregation: mean, higher_is_better: false}
+  - {metric: frac_wrong_length, aggregation: mean, higher_is_better: false}
+  - {metric: mean_response_chars, aggregation: mean, higher_is_better: true}
+
+metadata:
+  version: 1.0

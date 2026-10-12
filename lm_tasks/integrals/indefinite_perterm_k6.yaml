@@ -1,0 +1,6 @@
+include: _indefinite_perterm_template_yaml
+task: indefinite_perterm_k6
+tag: [indefinite, indefinite_perterm]
+metadata:
+  stage: compositional
+  k: 6

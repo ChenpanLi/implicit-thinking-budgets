@@ -1,0 +1,24 @@
+# The batching-evaluation task: one whole dataset file, whatever k its rows hold.
+#
+# Everything about grading is the shared template's, unchanged -- this differs
+# from the compositional tasks in exactly one thing, and it is the absence
+# below: there is no `k` in the metadata.
+#
+# `utils.load_mmlu_dataset` narrows the file to a single k *only* when its
+# metadata names one, so a task without it loads every row: every k a dynamic
+# batching produced, and every batching seed in the file. That is the point --
+# a batching strategy is evaluated over its whole partition of the pool, at
+# whatever sizes it chose, and the model is prompted on all p seeds in one run.
+#
+# The per-k and per-seed breakdown therefore comes from the rows (`k`,
+# `batch_seed`, `batch_pass`), which lm-eval writes into its samples file, and
+# not from the task name -- `acc` here is the strategy's score over the whole
+# corpus, which is the number the strategies are compared on.
+#
+# The tag is `mmlu_redux_*`, never `mmlu`: a tag named `mmlu` silently overrides
+# lm-eval's own MMLU group ("Task 'mmlu' from None overrides existing task").
+include: _mmlu_template_yaml
+task: mmlu_evaluation
+tag: [mmlu_redux, mmlu_redux_evaluation]
+metadata:
+  stage: evaluation

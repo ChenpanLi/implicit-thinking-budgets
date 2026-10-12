@@ -1,0 +1,85 @@
+# Shared base for every MMLU-Redux task.
+#
+# Deliberately has no .yaml extension: lm-eval's task index globs **/*.yaml, so
+# an extension here would register the template itself as a broken task.
+#
+# The task *tags* are `mmlu_redux`, not `mmlu`: lm-eval ships its own `mmlu`
+# task group, and a tag by that name overrides it ("Task 'mmlu' from None
+# overrides existing task from .../lm_eval/tasks/mmlu/default/_mmlu.yaml"). The
+# tasks would still run, but `--tasks mmlu` in this repo would then silently
+# mean something other than what it means everywhere else.
+
+custom_dataset: !function utils.load_mmlu_dataset
+test_split: test
+output_type: generate_until
+num_fewshot: 0
+
+doc_to_text: !function utils.doc_to_text
+doc_to_target: "{{reference_answer}}"
+process_results: !function utils.process_results
+
+generation_kwargs:
+  # REQUIRED. Left unset, TaskConfig defaults `until` to the fewshot delimiter
+  # ("\n\n"), which truncates a reasoning model at its first blank line -- and
+  # here it would also truncate at the blank line between two questions if the
+  # model restated them.
+  until: []
+  # REQUIRED when repeats > 1. LocalChatCompletion hard-codes seed=1234 into
+  # every payload, so without this every repeat returns an identical generation
+  # and the trial average is meaningless. `**gen_kwargs` is spread after "seed"
+  # in the payload literal, so null wins.
+  seed: null
+  do_sample: true
+  temperature: 0.6
+  top_p: 0.95
+  max_gen_toks: 40960
+
+repeats: 1
+
+filter_list:
+  # Two extraction strategies, scored side by side in one pass. `lenient` is
+  # what the figures read: an `Answer:`-style marker or a box anywhere in the
+  # response, and failing that the option letters at its end. `explicit`
+  # drops that last step, so acc,lenient - acc,explicit is what reading an
+  # unmarked response bought -- lucky guesses included. Neither requires
+  # \boxed{} (see the prompt comment in utils.py).
+  - name: lenient
+    filter:
+      - function: "custom"
+        filter_fn: !function utils.extract_lenient
+  - name: explicit
+    filter:
+      - function: "custom"
+        filter_fn: !function utils.extract_explicit
+
+metric_list:
+  # The headline: every one of the k questions answered correctly. This is the
+  # direct analogue of a correct antiderivative for a whole sum, and it is what
+  # the default figure plots.
+  - {metric: acc, aggregation: mean, higher_is_better: true}
+  # Partial credit, first-class rather than derived: the fraction of the k
+  # questions that were right. It and `acc` disagree by construction past k=1,
+  # and both are reported so neither can be silently read as the other.
+  - {metric: acc_terms, aggregation: mean, higher_is_better: true}
+  - {metric: mean_n_correct, aggregation: mean, higher_is_better: true}
+  - {metric: solved_all, aggregation: mean, higher_is_better: true}
+  - {metric: frac_wrong, aggregation: mean, higher_is_better: false}
+  # Kept apart rather than collapsed into one "parse error" counter: an empty
+  # response (a client timeout), a response naming no option at all, an answer
+  # list of the wrong length and an option letter that was never offered are
+  # four different problems with four different fixes.
+  - {metric: frac_unparseable, aggregation: mean, higher_is_better: false}
+  - {metric: frac_empty, aggregation: mean, higher_is_better: false}
+  - {metric: frac_no_answer, aggregation: mean, higher_is_better: false}
+  - {metric: frac_wrong_length, aggregation: mean, higher_is_better: false}
+  - {metric: frac_invalid_letter, aggregation: mean, higher_is_better: false}
+  - {metric: frac_no_letters, aggregation: mean, higher_is_better: false}
+  # Not a failure bucket: an answer list longer than k is graded on its first k
+  # (see `llm.core.mcq.answers`), and this is how often that happened. It is
+  # reported so the leniency has a price in the run's own numbers, the same way
+  # `acc,lenient - acc,explicit` prices the closing-prose guess.
+  - {metric: frac_truncated, aggregation: mean, higher_is_better: false}
+  - {metric: mean_response_chars, aggregation: mean, higher_is_better: true}
+
+metadata:
+  version: 1.0

@@ -1,0 +1,6 @@
+include: _gsm8k_template_yaml
+task: gsm8k_compositional_k10
+tag: [gsm8k_comp, gsm8k_compositional]
+metadata:
+  stage: compositional
+  k: 10

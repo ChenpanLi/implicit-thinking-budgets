@@ -1,0 +1,26 @@
+# Qwen3.8-27B, a hybrid of full-attention and linear-attention layers.
+model_id: "Qwen/Qwen3.8-27B"
+tensor_parallel_size: 1
+# 0.93: the 55.6 GB of weights take most of the card, and the few extra GB are what
+# lets a 128k window fit beside them.
+gpu_memory_utilization: 0.93
+# 131072 rather than the 262144 the checkpoint declares: the linear-attention state
+# (allocated up front for max_num_seqs sequences) and the KV cache share one pool.
+max_model_len: 131072
+max_num_seqs: 256
+trust_remote_code: true
+
+temperature: 0.6
+top_p: 0.95
+# max_model_len minus ~1024 tokens of prompt headroom; the in-process backend clamps
+# this per request to max_model_len - prompt_tokens anyway (llm.core.serving.lm_eval_vllm).
+max_tokens: 130048
+
+# Settings some runs of the paper used instead (`--model-variant`).
+variants:
+  # A shorter window: the composed runs on integrals, mmlu and onewordqa.
+  ctx-49k:
+    gpu_memory_utilization: 0.9
+    max_model_len: 49152
+    max_num_seqs: 572
+    max_tokens: 48128

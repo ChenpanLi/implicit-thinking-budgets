@@ -1,0 +1,6 @@
+include: _onewordqa_template_yaml
+task: onewordqa_compositional_k20
+tag: [onewordqa, onewordqa_compositional]
+metadata:
+  stage: compositional
+  k: 20

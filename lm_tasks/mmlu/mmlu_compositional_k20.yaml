@@ -1,0 +1,6 @@
+include: _mmlu_template_yaml
+task: mmlu_compositional_k20
+tag: [mmlu_redux, mmlu_redux_compositional]
+metadata:
+  stage: compositional
+  k: 20

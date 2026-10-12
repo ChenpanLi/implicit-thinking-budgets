@@ -1,0 +1,75 @@
+# Shared base for every integrals task: one \boxed{} per term of a k-term sum.
+#
+# Deliberately has no .yaml extension: lm-eval's task index globs **/*.yaml, so
+# an extension here would register the template itself as a broken task.
+#
+# The two ensembles, `boxed_last` and `final_answer`, both read a *block* of k
+# boxes, one per line; they differ in which block they prefer.
+
+custom_dataset: !function utils.load_integral_dataset
+test_split: test
+output_type: generate_until
+num_fewshot: 0
+
+doc_to_text: !function utils.doc_to_text
+doc_to_target: "{{integrand}}"
+process_results: !function utils.process_results
+
+generation_kwargs:
+  # REQUIRED. Left unset, TaskConfig defaults `until` to the fewshot delimiter
+  # ("\n\n"), which truncates a reasoning model at its first blank line.
+  until: []
+  # REQUIRED when repeats > 1. LocalChatCompletion hard-codes seed=1234 into
+  # every payload, so without this every repeat returns an identical
+  # generation and the trial average is meaningless. `**gen_kwargs` is spread
+  # after "seed" in the payload literal, so null wins.
+  seed: null
+  do_sample: true
+  temperature: 0.6
+  top_p: 0.95
+  max_gen_toks: 40960
+
+repeats: 1
+
+filter_list:
+  - name: boxed_last
+    filter:
+      - function: "custom"
+        filter_fn: !function utils.extract_boxed_list_last
+  - name: final_answer
+    filter:
+      - function: "custom"
+        filter_fn: !function utils.extract_boxed_list_final_answer
+
+metric_list:
+  # The headline: the whole problem solved, i.e. every one of the k terms
+  # answered correctly.
+  - {metric: acc, aggregation: mean, higher_is_better: true}
+  # Partial credit, first-class rather than derived: the share of the k terms
+  # that were right. It and `acc` disagree by construction past k=1, and the
+  # disagreement is what this mode exists to measure.
+  - {metric: acc_terms, aggregation: mean, higher_is_better: true}
+  - {metric: mean_n_correct, aggregation: mean, higher_is_better: true}
+  - {metric: solved_all, aggregation: mean, higher_is_better: true}
+  - {metric: frac_wrong, aggregation: mean, higher_is_better: false}
+  - {metric: frac_unparseable, aggregation: mean, higher_is_better: false}
+  - {metric: frac_empty, aggregation: mean, higher_is_better: false}
+  - {metric: frac_no_boxed, aggregation: mean, higher_is_better: false}
+  - {metric: frac_unbalanced, aggregation: mean, higher_is_better: false}
+  # The failure this contract adds: boxes were found, but not as many as there
+  # are terms. Kept apart from `frac_no_boxed` because "the model lost count"
+  # and "the model wrote no box at all" are different problems with different
+  # fixes.
+  - {metric: frac_wrong_length, aggregation: mean, higher_is_better: false}
+  - {metric: frac_echoed_integral, aggregation: mean, higher_is_better: false}
+  - {metric: frac_latex_error, aggregation: mean, higher_is_better: false}
+  - {metric: frac_timeout, aggregation: mean, higher_is_better: false}
+  - {metric: frac_checker_error, aggregation: mean, higher_is_better: false}
+  # Of the *terms*: one box that would not parse costs one term here and the
+  # whole attempt in `acc`, so the two are not readings of the same number.
+  - {metric: frac_terms_unparseable, aggregation: mean, higher_is_better: false}
+  - {metric: frac_numeric_only, aggregation: mean, higher_is_better: false}
+  - {metric: mean_response_chars, aggregation: mean, higher_is_better: true}
+
+metadata:
+  version: 1.0

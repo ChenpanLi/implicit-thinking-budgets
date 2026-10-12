@@ -1,0 +1,6 @@
+include: _gpqa_template_yaml
+task: gpqa_compositional_k3
+tag: [gpqa_comp, gpqa_comp_compositional]
+metadata:
+  stage: compositional
+  k: 3
