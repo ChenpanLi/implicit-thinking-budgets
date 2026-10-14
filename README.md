@@ -3,13 +3,13 @@
 # On the Fragility of Tasks under Composition: Implicit Budgeting in Language Models
 
 
-**Chenpan Li**<sup>1</sup> · **Thies Brockmoeller**<sup>1</sup> · **Stefanie Jegelka**<sup>1,2</sup> · **Sharut Gupta**<sup>2,◇</sup> · **Nikolaos Karalias**<sup>2,◇</sup>
+**Chenpan Li**<sup>1</sup>   **Thies Brockmoeller**<sup>1</sup>   **Stefanie Jegelka**<sup>1,2</sup>   **Sharut Gupta**<sup>2,◇</sup>   **Nikolaos Karalias**<sup>2,◇</sup>
 
-<sup>1</sup>Technical University of Munich &nbsp;·&nbsp; <sup>2</sup>Massachusetts Institute of Technology
+<sup>1</sup>Technical University of Munich &nbsp; &nbsp; <sup>2</sup>Massachusetts Institute of Technology
 
 <sup>◇</sup>Denotes equal advisory roles
 
-[Setup](#setup) · [Reproduce the results](#reproduce-the-paper) · [Run from scratch](#run-from-scratch) · [FAQ](#faq) · [Citation](#citation)
+[Paper](https://chenpanl.github.io/fragility/)   [Project page](https://chenpanl.github.io/fragility/)   
 
 
 </div>
@@ -83,12 +83,12 @@ commands, cost, and how the paper's runs differ from a clean rerun.
 
 | Folder | GPU | Paper |
 | --- | :---: | --- |
-| [`0-datasets`](experiments/0-datasets) | | the eight item pools |
+| [`0-datasets`](experiments/0-datasets) | | the eight task pools |
 | [`1-isolated`](experiments/1-isolated) | ✓ | k=1 baseline; the "reliably solved" filter |
 | [`2-random-batching`](experiments/2-random-batching) | ✓ | random batching at each k; fragility labels |
-| [`I-success-conditioned-drop`](experiments/I-success-conditioned-drop) | ✓ | accuracy drop of solved items with k; context-limit figure and table |
+| [`I-success-conditioned-drop`](experiments/I-success-conditioned-drop) | ✓ | accuracy drop of solved tasks with k; context-limit figure and table |
 | [`II-token-ratio`](experiments/II-token-ratio) | ✓ | per-task thinking shrinks with k; power-law fits; tag coverage |
-| [`III-budget-forcing`](experiments/III-budget-forcing) | ✓ | forcing the composed thinking length onto isolated items |
+| [`III-budget-forcing`](experiments/III-budget-forcing) | ✓ | forcing the composed thinking length onto isolated tasks |
 | [`IV-position-effect`](experiments/IV-position-effect) | | accuracy by position in the prompt |
 | [`V-fragility-correlation`](experiments/V-fragility-correlation) | | fragility correlates across models and k |
 | [`VI-fragility-aware-batching`](experiments/VI-fragility-aware-batching) | ✓ | the batching tables and their averages |
@@ -97,42 +97,10 @@ commands, cost, and how the paper's runs differ from a clean rerun.
 ## FAQ
 
 <details>
-<summary><b>Where does the data live?</b></summary>
-<br>
-
-Every input and output lives under `$RUN_DIR`, and nothing is written inside the
-repository. The code builds all paths in `src/llm/paths.py`.
-
-```
-$RUN_DIR/
-  datasets/<dataset>.jsonl                       item pools                      (5 MB)
-  batches/<stage>/<dataset>/<model>.jsonl        what each run is asked           (7 GB)
-  runs/<stage>/<dataset>/<model>/<run-id>/       what each run answered         (108 GB)
-  probe/                                         embeddings, labels, heads, k    (0.5 GB)
-  results/<experiment>/                          figures (.pdf), tables (.tex), CSVs
-```
-
-A run directory holds `run.json` (model, settings, command), `trace.jsonl` (one graded
-record per response) and lm-eval's `results_*.json` and `samples_*.jsonl`. Analyses pool
-every run they find under `runs/<stage>/<dataset>/<model>/`, so a directory must hold
-only the runs that belong to the result.
-
-| Stage | What is asked |
-| --- | --- |
-| `isolated-a`, `isolated-b` | every item alone, 5 batching seeds; pass a uses generation seed 42, pass b seed 43 |
-| `random-a`, `random-b` | the pool split into random prompts of k items, same seeds |
-| `composed` | prompts of k reliably solved items (correct 3 of 3 times in `isolated-a`) |
-| `per-term-trace` | prompts whose items are tagged `Q01`, `Q02`, …, so thinking can be cut per item |
-| `budget-forcing` | every item alone, its thinking capped at the length it got inside a composition |
-| `fragility-measured`, `fragility-probe` | prompts sized per item by measured or predicted fragility |
-
-</details>
-
-<details>
 <summary><b>Which datasets and models are included?</b></summary>
 <br>
 
-| Dataset | Items | Source |
+| Dataset | tasks | Source |
 | --- | --- | --- |
 | `integrals` | 1,000 indefinite integrals | ours, shipped in `datasets/integrals/` (Git LFS) |
 | `onewordqa` | 1,548 questions with a one-word answer | ours, shipped in `datasets/onewordqa/` (Git LFS) |
@@ -166,35 +134,6 @@ there to include it.
 </details>
 
 <details>
-<summary><b>Will a clean rerun match the paper exactly?</b></summary>
-<br>
-
-Not in every case. The stage scripts encode the paper's design, but a few of the paper's
-runs departed from it. Those runs are kept as they are, so every published number still
-reproduces from them:
-
-- **Top-up runs:** some isolated and random passes on GSM8K, MATH-500 and GPQA-Diamond
-  merged a first run with a top-up that used other batching seeds. A rerun uses seeds
-  0–4.
-- **Qwen3.8 27B on GPQA-Diamond** was rerun after its fragility-aware runs were built.
-  The regular stages hold the rerun, and `isolated-*-v1` and `random-*-v1` hold the first
-  passes. The batching table and the probe read the first passes for this pair
-  (`llm.specs.baseline_stages`).
-- **Integrals in `isolated-a`:** the paper's runs used a single-answer prompt; every
-  other stage, and every rerun, grades one answer per term.
-- **Composed sets of integrals, MMLU-Redux and OneWordQA** were drawn from an earlier
-  filter run. `llm.compose` filters on `isolated-a` for every dataset, so it draws
-  different compositions for these three. The other five rebuild exactly.
-- **Composed MMLU-Redux, Qwen3 8B:** its composed-set file was redrawn after the run.
-  The batch file in `$RUN_DIR` was rebuilt from the documents stored with the run.
-- **StrategyQA, R1 Qwen3 8B** was regraded after its probe labels were written. The
-  stored labels and composition sizes are used.
-- **Per-term traces** were run in seed chunks (`k3-s0-4`, `k3-s5-9`, …); a rerun makes
-  one run per k.
-
-</details>
-
-<details>
 <summary><b>How is the code organised?</b></summary>
 <br>
 
@@ -203,8 +142,8 @@ src/llm/
   paths.py  specs.py       every path; every dataset, model and stage setting
   run.py                   python -m llm.run: one run of one stage (lm-eval + vLLM or OpenRouter)
   pools/  batches.py       python -m llm.pools, python -m llm.batches
-  compose.py               python -m llm.compose: composed sets of reliably solved items
-  sections.py              python -m llm.sections: cut a per-term trace into per-item sections
+  compose.py               python -m llm.compose: composed sets of reliably solved tasks
+  sections.py              python -m llm.sections: cut a per-term trace into per-task sections
   budget_forcing.py        python -m llm.budget_forcing build|run
   probe/                   python -m llm.probe.<step>: embeddings, labels, heads, composition sizes
   plotting.py              the figure style
@@ -224,9 +163,9 @@ reproduce_results.sh       every analysis, CPU only
 If you use this code or the two datasets, please cite the paper:
 
 ```bibtex
-@inproceedings{li2026implicitthinkingbudgets,
+@inproceedings{li2026fragility,
   title     = {On the Fragility of Tasks under Composition: Implicit Budgeting in Language Models},
-  author    = {Li, Chenpan and Brockm{\"o}ller, Thies and Jegelka, Stefanie and
+  author    = {Li, Chenpan and Brockmoeller, Thies and Jegelka, Stefanie and
                Gupta, Sharut and Karalias, Nikolaos},
   year      = {2026},
 }
