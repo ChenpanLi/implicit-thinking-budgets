@@ -26,3 +26,7 @@ datasets/*
 
 # The paper lives in its own repository, kept beside the code but never part of it
 paper/
+paper-arxiv/
+
+# The project page is its own repository too, published on GitHub Pages
+page/
