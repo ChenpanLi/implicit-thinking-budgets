@@ -11,7 +11,7 @@
 </p>
 
 <p>
-<sup>1</sup>Technical University of Munich&emsp;&emsp;<sup>2</sup>Massachusetts Institute of Technology<br>
+<sup>1</sup>TUM&emsp;&emsp;<sup>2</sup>MIT CSAIL<br>
 <sub><sup>◇</sup>Equal advisory role</sub>
 </p>
 
