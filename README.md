@@ -9,7 +9,9 @@
 
 <sup>◇</sup>Denotes equal advisory roles
 
-[Paper](https://chenpanl.github.io/fragility/)   [Project page](https://chenpanl.github.io/fragility/)   
+[Paper](https://chenpanli.github.io/fragility/)   [Project page](https://chenpanli.github.io/fragility/)   
+
+<img src="assets/figure1.png" alt="Three tasks solved alone each get more reasoning than they need. Composed into one prompt, every task's reasoning shrinks; tasks 1 and 3 still clear their requirement, while task 2, which needs long reasoning, falls below it and fails." width="90%">
 
 
 </div>
