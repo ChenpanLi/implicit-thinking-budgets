@@ -53,8 +53,16 @@ set `PY` to use another interpreter.
 
 ## Reproduce the paper
 
-**1. Point to the runs.** Set `RUN_DIR` in `.env` to the paper's run directory. No GPU
-is needed from here on.
+**1. Download the runs.** The paper's run directory (61 GB) is on the
+[Hugging Face Hub](https://huggingface.co/datasets/chenpanli/fragility). It is gated
+because it holds GPQA questions in plain text, so accept its terms there and run
+`hf auth login` once. Then set `RUN_DIR` in `.env` to an empty directory and fetch it:
+
+```bash
+bash download_runs.sh
+```
+
+No GPU is needed from here on.
 
 **2. Rebuild every result.**
 
@@ -167,6 +175,7 @@ lm_tasks/<dataset>/        lm-eval task definitions and prompt templates
 datasets/                  the two pools we built (Git LFS)
 assets/                    Figure 1 of the paper
 experiments/               one folder per stage, in paper order
+download_runs.sh           the paper's run directory from the Hugging Face Hub into RUN_DIR
 reproduce_results.sh       every analysis, CPU only
 ```
 
