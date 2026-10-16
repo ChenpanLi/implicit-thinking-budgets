@@ -1,15 +1,23 @@
 <div align="center">
 
-# On the Fragility of Tasks under Composition: Implicit Budgeting in Language Models
+<h1>On the Fragility of Tasks under Composition:<br>Implicit Budgeting in Language Models</h1>
 
+<p>
+<b>Chenpan Li</b><sup>1</sup>&emsp;
+<b>Thies Brockmoeller</b><sup>1</sup>&emsp;
+<b>Stefanie Jegelka</b><sup>1,2</sup>&emsp;
+<b>Sharut Gupta</b><sup>2,◇</sup>&emsp;
+<b>Nikolaos Karalias</b><sup>2,◇</sup>
+</p>
 
-**Chenpan Li**<sup>1</sup>   **Thies Brockmoeller**<sup>1</sup>   **Stefanie Jegelka**<sup>1,2</sup>   **Sharut Gupta**<sup>2,◇</sup>   **Nikolaos Karalias**<sup>2,◇</sup>
+<p>
+<sup>1</sup>Technical University of Munich&emsp;&emsp;<sup>2</sup>Massachusetts Institute of Technology<br>
+<sub><sup>◇</sup>Equal advisory role</sub>
+</p>
 
-<sup>1</sup>Technical University of Munich &nbsp; &nbsp; <sup>2</sup>Massachusetts Institute of Technology
-
-<sup>◇</sup>Denotes equal advisory roles
-
-[Paper](https://chenpanli.github.io/fragility/)   [Project page](https://chenpanli.github.io/fragility/)   
+<p>
+<a href="https://chenpanli.github.io/fragility/"><b>Paper</b></a>&ensp;·&ensp;<a href="https://chenpanli.github.io/fragility/"><b>Project page</b></a>
+</p>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/figure1-dark.png">
